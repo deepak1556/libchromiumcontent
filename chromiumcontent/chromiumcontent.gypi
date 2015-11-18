@@ -14,6 +14,8 @@
     'v8_libraries': '["v8", "v8_snapshot", "v8_nosnapshot", "v8_external_snapshot", "v8_base", "v8_libbase", "v8_libplatform"]',
     # The icu libraries.
     'icu_libraries': '["icui18n", "icuuc"]',
+    # Enable Native Client.
+    'disable_nacl': 0,
     'conditions': [
       ['OS=="win"', {
         # On Chrome 41 this is disabled on Windows.
@@ -90,7 +92,7 @@
       }],
     ],
     'target_conditions': [
-      ['_type=="static_library" and _toolset=="target" and OS=="linux" and component=="static_library"', {
+      ['_type=="static_library" and _toolset=="target" and OS=="linux"', {
         'standalone_static_library': 1,
       }],
       ['_target_name in <(v8_libraries) + <(icu_libraries)', {
@@ -122,7 +124,7 @@
           },
         },
       }],
-      ['_target_name in ["gtk2ui", "devtools_http_handler", "devtools_discovery", "http_server"]', {
+      ['_target_name in ["gtk2ui"]', {
         'type': 'static_library',
         'standalone_static_library': 1,
         'cflags': [
