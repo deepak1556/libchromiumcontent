@@ -1,0 +1,60 @@
+diff --git a/gin/gin.gyp b/gin/gin.gyp
+index 0ea039f..15ca0cc 100644
+--- a/gin/gin.gyp
++++ b/gin/gin.gyp
+@@ -15,6 +15,8 @@
+         '../base/base.gyp:base',
+         '../base/third_party/dynamic_annotations/dynamic_annotations.gyp:dynamic_annotations',
+         '../v8/src/v8.gyp:v8',
++        '../v8/src/v8.gyp:v8_libbase',
++        '../v8/src/v8.gyp:v8_libplatform',
+       ],
+       'export_dependent_settings': [
+         '../base/base.gyp:base',
+diff --git a/gin/public/v8_platform.h b/gin/public/v8_platform.h
+index ad37a5c..66ce70b 100644
+--- a/gin/public/v8_platform.h
++++ b/gin/public/v8_platform.h
+@@ -49,12 +49,19 @@ class GIN_EXPORT V8Platform : public NON_EXPORTED_BASE(v8::Platform) {
+                                 const char* name,
+                                 uint64_t handle) override;
+ 
++  void set_default_platform(v8::Platform* platform) {
++    default_platform_ = platform;
++  }
++  v8::Platform* default_platform() const { return default_platform_; }
++
+  private:
+   friend struct base::DefaultLazyInstanceTraits<V8Platform>;
+ 
+   V8Platform();
+   ~V8Platform() override;
+ 
++  v8::Platform* default_platform_;
++
+   DISALLOW_COPY_AND_ASSIGN(V8Platform);
+ };
+ 
+diff --git a/gin/v8_initializer.cc b/gin/v8_initializer.cc
+index c5cf128..f83cc37 100644
+--- a/gin/v8_initializer.cc
++++ b/gin/v8_initializer.cc
+@@ -25,6 +25,7 @@
+ #include "base/time/time.h"
+ #include "crypto/sha2.h"
+ #include "gin/public/gin_features.h"
++#include "v8/include/libplatform/libplatform.h"
+ 
+ #if defined(V8_USE_EXTERNAL_STARTUP_DATA)
+ #if defined(OS_ANDROID)
+@@ -419,7 +420,9 @@ void V8Initializer::Initialize(IsolateHolder::ScriptMode mode,
+   if (v8_is_initialized)
+     return;
+ 
+-  v8::V8::InitializePlatform(V8Platform::Get());
++  V8Platform::Get()->set_default_platform(
++      v8::platform::CreateDefaultPlatform(0));
++  v8::V8::InitializePlatform(V8Platform::Get()->default_platform());
+ 
+   if (IsolateHolder::kStrictMode == mode) {
+     static const char use_strict[] = "--use_strict";
