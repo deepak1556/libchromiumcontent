@@ -12,7 +12,7 @@ from lib.config import get_output_dir
 SOURCE_ROOT = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 VENDOR_DIR = os.path.join(SOURCE_ROOT, 'vendor')
 TARGETS = ['chromiumcontent_all']
-COMPONENTS = ['static_library', 'shared_library', 'ffmpeg']
+COMPONENTS = ['static_library', 'shared_library', 'ffmpeg', 'tests']
 
 MIPS64EL_GCC = 'gcc-4.8.3-d197-n64-loongson'
 # Whether the host system is a mips64el machine.
@@ -60,13 +60,15 @@ def main():
       elif component == 'static_library' and args.no_static_library:
         continue
       out_dir = get_output_dir(SOURCE_ROOT, target_arch, component)
-      target = 'chromiumcontent:chromiumcontent'
-      subprocess.check_call([NINJA, '-C', os.path.relpath(out_dir), target], env=env)
+      subenv = env.copy()
       if component == 'static_library':
-        subenv = env.copy()
         subenv['CHROMIUMCONTENT_2ND_PASS'] = '1'
         target = 'chromiumcontent:libs'
-        subprocess.check_call([NINJA, '-C', os.path.relpath(out_dir), target], env=subenv)
+      elif component == 'tests':
+        target = 'chromiumcontent:chromiumcontent_tests'
+      else:
+        target = 'chromiumcontent:chromiumcontent'
+      subprocess.check_call([NINJA, '-C', os.path.relpath(out_dir), target], env=subenv)
 
 
 def parse_args():
